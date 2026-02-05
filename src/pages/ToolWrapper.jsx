@@ -10,6 +10,7 @@ import OCR from './tools/OCR';
 import InvoiceScanner from './tools/InvoiceScanner';
 import ToolPlaceholder from './ToolPlaceholder';
 import SEO from '../components/SEO';
+import ToolSEOContent from '../components/ToolSEOContent';
 import { TOOLS } from '../data/tools';
 
 const TOOL_COMPONENTS = {
@@ -36,12 +37,17 @@ export default function ToolWrapper() {
             <>
                 {toolInfo && (
                     <SEO
-                        title={toolInfo.name}
+                        title={toolInfo.content?.title || toolInfo.name}
                         description={toolInfo.description}
                         url={`https://pdf-pro-tools.vercel.app/tools/${toolId}`}
                     />
                 )}
-                <Component />
+                <div className="pb-12">
+                    <Component />
+                    {toolInfo && toolInfo.content && (
+                        <ToolSEOContent content={toolInfo.content} />
+                    )}
+                </div>
             </>
         );
     }
