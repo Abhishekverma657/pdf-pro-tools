@@ -2,11 +2,14 @@ import { TOOLS } from '../data/tools';
 import { ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
+import SEO from '../components/SEO';
+
 export default function Home() {
     const featuredTools = TOOLS.slice(0, 4);
 
     return (
         <div className="space-y-12 animate-fade-in">
+            <SEO />
             {/* Hero Section */}
             <section className="text-center py-12 md:py-20 space-y-6">
                 <h1 className="text-4xl md:text-6xl font-bold bg-gradient-to-r from-primary-700 to-primary bg-clip-text text-transparent leading-tight">
