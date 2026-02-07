@@ -246,29 +246,22 @@ export const excelToPdf = async (file) => {
 
     const doc = new jsPDF();
 
-    // jspdf-autotable is a plugin, it adds autoTable to the jsPDF prototype
-    // or sometimes needs check if loaded
-    import('jspdf-autotable').then(() => {
+    // jspdf-autotable should be available via the side-effect import at the top
+    // Access it through the jsPDF instance
+    if (typeof doc.autoTable === 'function') {
         doc.autoTable({
             head: [jsonData[0]],
             body: jsonData.slice(1),
         });
-    });
-
-    // Wait slightly or structure differently since import is async in this context
-    // Actually, top-level import 'jspdf-autotable' usually works if side-effects apply
-    // Let's rely on the side-effect import we already have but ensure it attaches.
-
-    // Alternative strict usage for modern bundlers:
-    // (doc).autoTable(...) might fail if types are strict, but here it's runtime.
-    // The previous error "doc.autoTable is not a function" means the plugin didn't attach.
-
-    // Fix: Using the default export from autotable often helps explicitly apply it
-    const autoTable = (await import('jspdf-autotable')).default;
-    autoTable(doc, {
-        head: [jsonData[0]],
-        body: jsonData.slice(1),
-    });
+    } else {
+        // Fallback: manually draw table if autoTable not available
+        let y = 10;
+        jsonData.forEach((row, i) => {
+            const text = row.join(' | ');
+            doc.text(text, 10, y);
+            y += 10;
+        });
+    }
 
     return doc.output('blob');
 };
