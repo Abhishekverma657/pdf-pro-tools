@@ -1,6 +1,7 @@
 import {
     FileText, Scissors, Combine, Image,
-    ScanLine, Lock, Eye, Type, RotateCw
+    ScanLine, Lock, Eye, Type, RotateCw,
+    FileType, Table, Hash, Stamp
 } from 'lucide-react';
 
 export const TOOLS = [
@@ -18,18 +19,156 @@ export const TOOLS = [
                 "Extract text from any PDF document instantly",
                 "Copy text to clipboard with one click",
                 "Download extracted text as .txt file",
-                "100% Client-side processing (Secure)",
-                "No processing limits"
+                "100% Client-side processing (Secure)"
             ],
             steps: [
                 "Upload your PDF file.",
                 "Wait a second for the text to be extracted.",
                 "Review the text in the preview box.",
-                "Click 'Download Text' to save it or copy it manually."
+                "Click 'Download Text' to save it."
             ],
             faq: [
                 { q: "Is it free?", a: "Yes, this tool is completely free to use." },
-                { q: "Is my data safe?", a: "Absolutely. All processing happens in your browser. Your files never touch our servers." }
+                { q: "Is my data safe?", a: "Absolutely. All processing happens in your browser." }
+            ]
+        }
+    },
+    {
+        id: 'pdf-to-word',
+        name: 'PDF to Word',
+        icon: FileType,
+        description: 'Convert PDF files to editable Word documents (.docx).',
+        path: '/tools/pdf-to-word',
+        color: 'from-blue-600 to-blue-800',
+        iconColor: 'text-blue-700',
+        content: {
+            title: "PDF to Word Converter",
+            features: [
+                "Convert PDF to DOCX instantly",
+                "Editable text output",
+                "No software installation needed",
+                "Secure client-side conversion"
+            ],
+            steps: [
+                "Upload your PDF file.",
+                "Click 'Start Conversion'.",
+                "Download your editable Word document."
+            ]
+        }
+    },
+    {
+        id: 'word-to-pdf',
+        name: 'Word to PDF',
+        icon: FileText,
+        description: 'Convert Word documents to professional PDF format.',
+        path: '/tools/word-to-pdf',
+        color: 'from-blue-500 to-indigo-500',
+        iconColor: 'text-indigo-600',
+        content: {
+            title: "Word to PDF Converter",
+            features: [
+                "Convert DOCX to PDF",
+                "Preserves basic formatting",
+                "Fast processing",
+                "Secure privacy"
+            ],
+            steps: [
+                "Upload your Word (.docx) file.",
+                "Click 'Start Conversion'.",
+                "Download your new PDF file."
+            ]
+        }
+    },
+    {
+        id: 'excel-to-pdf',
+        name: 'Excel to PDF',
+        icon: Table,
+        description: 'Turn Excel spreadsheets into easy-to-read PDFs.',
+        path: '/tools/excel-to-pdf',
+        color: 'from-green-600 to-emerald-700',
+        iconColor: 'text-green-600',
+        content: {
+            title: "Excel to PDF Converter",
+            features: [
+                "Convert XLSX to PDF tables",
+                "Auto-formats data",
+                "Clean output",
+                "Fast and free"
+            ],
+            steps: [
+                "Upload your Excel (.xlsx) file.",
+                "The tool processes your spreadsheet.",
+                "Download the PDF with your data tables."
+            ]
+        }
+    },
+    {
+        id: 'pdf-to-jpg',
+        name: 'PDF to JPG',
+        icon: Image,
+        description: 'Convert PDF pages into high-quality images.',
+        path: '/tools/pdf-to-jpg',
+        color: 'from-yellow-500 to-orange-500',
+        iconColor: 'text-yellow-600',
+        content: {
+            title: "PDF to Image Converter",
+            features: [
+                "Convert pages to PNG images",
+                "Download as ZIP archive",
+                "High resolution output",
+                "Batch processing"
+            ],
+            steps: [
+                "Upload your PDF.",
+                "Click 'Start Conversion'.",
+                "Download a ZIP file containing all pages as images."
+            ]
+        }
+    },
+    {
+        id: 'watermark-pdf',
+        name: 'Watermark PDF',
+        icon: Stamp,
+        description: 'Stamp text watermarks on your PDF pages.',
+        path: '/tools/watermark-pdf',
+        color: 'from-pink-500 to-rose-500',
+        iconColor: 'text-pink-500',
+        content: {
+            title: "Add Watermark to PDF",
+            features: [
+                "Custom text watermarks",
+                "Diagonal placement",
+                "Apply to all pages",
+                "Protect your documents"
+            ],
+            steps: [
+                "Upload your PDF.",
+                "Type your watermark text.",
+                "Click 'Apply & Download'.",
+                "Get your stamped PDF instantly."
+            ]
+        }
+    },
+    {
+        id: 'page-numbers',
+        name: 'Page Numbers',
+        icon: Hash,
+        description: 'Add page numbers to your PDF document.',
+        path: '/tools/page-numbers',
+        color: 'from-gray-600 to-gray-800',
+        iconColor: 'text-gray-700',
+        content: {
+            title: "Add Page Numbers to PDF",
+            features: [
+                "Auto-number all pages",
+                "Clean positioning",
+                "Professional look",
+                "Instant processing"
+            ],
+            steps: [
+                "Upload your PDF.",
+                "Click 'Start Conversion'.",
+                "Download the numbered PDF."
             ]
         }
     },

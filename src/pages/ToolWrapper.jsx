@@ -13,6 +13,13 @@ import SEO from '../components/SEO';
 import ToolSEOContent from '../components/ToolSEOContent';
 import { TOOLS } from '../data/tools';
 
+import PDFToWord from './tools/PDFToWord';
+import WordToPDF from './tools/WordToPDF';
+import ExcelToPDF from './tools/ExcelToPDF';
+import PDFToJPG from './tools/PDFToJPG';
+import WatermarkPDF from './tools/WatermarkPDF';
+import PageNumbers from './tools/PageNumbers';
+
 const TOOL_COMPONENTS = {
     'extract-text': ExtractText,
     'split-pdf': SplitPDF,
@@ -23,6 +30,12 @@ const TOOL_COMPONENTS = {
     'sign-pdf': SignPDF,
     'ocr': OCR,
     'scan-invoice': InvoiceScanner,
+    'pdf-to-word': PDFToWord,
+    'word-to-pdf': WordToPDF,
+    'excel-to-pdf': ExcelToPDF,
+    'pdf-to-jpg': PDFToJPG,
+    'watermark-pdf': WatermarkPDF,
+    'page-numbers': PageNumbers,
 };
 
 export default function ToolWrapper() {

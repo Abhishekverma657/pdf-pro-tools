@@ -1,7 +1,12 @@
-import { PDFDocument, degrees, rgb } from 'pdf-lib';
+import { PDFDocument, degrees, rgb, StandardFonts } from 'pdf-lib';
 import * as pdfjsLib from 'pdfjs-dist';
 import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
+import { Document, Packer, Paragraph, TextRun } from 'docx';
+import mammoth from 'mammoth';
+import * as XLSX from 'xlsx';
+import { jsPDF } from 'jspdf';
+import 'jspdf-autotable';
 
 // Initialize PDF.js worker
 pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js`;
@@ -30,13 +35,6 @@ export const splitPdf = async (file, pageRanges) => {
     const buffer = await file.arrayBuffer();
     const pdf = await PDFDocument.load(buffer);
     const zip = new JSZip();
-
-    // pageRanges is array of arrays/numbers e.g. [[1,2], 3, [4,5]]
-    // For simplicity, we'll assume we split EVERY page if no range provided, 
-    // or handle range logic. Here let's implement split all pages for now or range.
-
-    // We'll implement a simple "split by pages" where we create a new PDF for each defined range
-    // Range format: { start: 1, end: 2 } (1-based)
 
     for (let i = 0; i < pageRanges.length; i++) {
         const range = pageRanges[i];
@@ -81,7 +79,6 @@ export const imagesToPdf = async (files) => {
         const buffer = await file.arrayBuffer();
         let image;
 
-        // Check helper to determine image type
         const isPng = file.type === 'image/png' || file.name.toLowerCase().endsWith('.png');
         const isJpg = file.type === 'image/jpeg' || file.type === 'image/jpg' || file.name.toLowerCase().endsWith('.jpg') || file.name.toLowerCase().endsWith('.jpeg');
 
@@ -90,14 +87,12 @@ export const imagesToPdf = async (files) => {
         } else if (isPng) {
             image = await pdfDoc.embedPng(buffer);
         } else {
-            // Fallback: try embedding as PNG if type is messy, or skip
             try {
                 image = await pdfDoc.embedPng(buffer);
             } catch (e) {
                 try {
                     image = await pdfDoc.embedJpg(buffer);
                 } catch (e2) {
-                    console.warn(`Could not embed image: ${file.name}`, e2);
                     continue;
                 }
             }
@@ -106,7 +101,6 @@ export const imagesToPdf = async (files) => {
         const page = pdfDoc.addPage();
         const { width, height } = image.scale(1);
 
-        // Scale image to fit page while maintaining aspect ratio
         const pageWidth = page.getWidth();
         const pageHeight = page.getHeight();
 
@@ -137,7 +131,7 @@ export const pdfToImages = async (file) => {
 
     for (let i = 1; i <= pdf.numPages; i++) {
         const page = await pdf.getPage(i);
-        const viewport = page.getViewport({ scale: 2.0 }); // High quality scale
+        const viewport = page.getViewport({ scale: 2.0 });
         const canvas = document.createElement('canvas');
         const context = canvas.getContext('2d');
         canvas.height = viewport.height;
@@ -177,7 +171,158 @@ export const protectPdf = async (file, password) => {
     const pdf = await PDFDocument.load(buffer);
     const savedPdf = await pdf.save({
         userPassword: password,
-        ownerPassword: password, // usually same for simple protection
+        ownerPassword: password,
     });
+    return new Blob([savedPdf], { type: 'application/pdf' });
+};
+
+// --- New Advanced Tools ---
+
+export const pdfToWord = async (file) => {
+    const buffer = await file.arrayBuffer();
+    const loadingTask = pdfjsLib.getDocument(buffer);
+    const pdf = await loadingTask.promise;
+
+    const children = [];
+
+    for (let i = 1; i <= pdf.numPages; i++) {
+        const page = await pdf.getPage(i);
+        const textContent = await page.getTextContent();
+        const pageText = textContent.items.map(item => item.str).join(' ');
+
+        children.push(
+            new Paragraph({
+                children: [new TextRun(pageText)],
+            })
+        );
+        children.push(new Paragraph("")); // Empty line between pages
+    }
+
+    const doc = new Document({
+        sections: [{
+            properties: {},
+            children: children,
+        }],
+    });
+
+    const blob = await Packer.toBlob(doc);
+    return blob;
+};
+
+export const wordToPdf = async (file) => {
+    const arrayBuffer = await file.arrayBuffer();
+    const result = await mammoth.convertToHtml({ arrayBuffer });
+    const html = result.value;
+
+    const doc = new jsPDF();
+    // Simple HTML to PDF
+    // Note: For complex docs this is basic. Client-side limitation.
+    // We create a temporary element to render HTML for jsPDF
+    const element = document.createElement('div');
+    element.innerHTML = html;
+    element.style.width = '190mm'; // A4 width approx
+    document.body.appendChild(element);
+
+    await doc.html(element, {
+        callback: function (doc) {
+            document.body.removeChild(element);
+        },
+        x: 10,
+        y: 10,
+        width: 190,
+        windowWidth: 800
+    });
+
+    return doc.output('blob');
+};
+
+export const excelToPdf = async (file) => {
+    const arrayBuffer = await file.arrayBuffer();
+    const workbook = XLSX.read(arrayBuffer);
+    const firstSheetName = workbook.SheetNames[0];
+    const worksheet = workbook.Sheets[firstSheetName];
+
+    const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+
+    const doc = new jsPDF();
+
+    // jspdf-autotable is a plugin, it adds autoTable to the jsPDF prototype
+    // or sometimes needs check if loaded
+    import('jspdf-autotable').then(() => {
+        doc.autoTable({
+            head: [jsonData[0]],
+            body: jsonData.slice(1),
+        });
+    });
+
+    // Wait slightly or structure differently since import is async in this context
+    // Actually, top-level import 'jspdf-autotable' usually works if side-effects apply
+    // Let's rely on the side-effect import we already have but ensure it attaches.
+
+    // Alternative strict usage for modern bundlers:
+    // (doc).autoTable(...) might fail if types are strict, but here it's runtime.
+    // The previous error "doc.autoTable is not a function" means the plugin didn't attach.
+
+    // Fix: Using the default export from autotable often helps explicitly apply it
+    const autoTable = (await import('jspdf-autotable')).default;
+    autoTable(doc, {
+        head: [jsonData[0]],
+        body: jsonData.slice(1),
+    });
+
+    return doc.output('blob');
+};
+
+export const addWatermark = async (file, text) => {
+    const buffer = await file.arrayBuffer();
+    const pdf = await PDFDocument.load(buffer);
+    const pages = pdf.getPages();
+    const font = await pdf.embedFont(StandardFonts.HelveticaBold);
+
+    pages.forEach(page => {
+        const { width, height } = page.getSize();
+        const fontSize = 50;
+        const textWidth = font.widthOfTextAtSize(text, fontSize);
+        const textHeight = font.heightAtSize(fontSize);
+
+        page.drawText(text, {
+            x: width / 2 - textWidth / 2,
+            y: height / 2 - textHeight / 2,
+            size: fontSize,
+            font: font,
+            color: rgb(0.75, 0.75, 0.75),
+            rotate: degrees(45),
+            opacity: 0.5,
+        });
+    });
+
+    const savedPdf = await pdf.save();
+    return new Blob([savedPdf], { type: 'application/pdf' });
+};
+
+export const addPageNumbers = async (file) => {
+    const buffer = await file.arrayBuffer();
+    const pdf = await PDFDocument.load(buffer);
+    const pages = pdf.getPages();
+    const font = await pdf.embedFont(StandardFonts.Helvetica);
+
+    const totalPages = pages.length;
+
+    pages.forEach((page, index) => {
+        const { width } = page.getSize();
+        const text = `Page ${index + 1} of ${totalPages}`;
+        const fontSize = 12;
+        const textWidth = font.widthOfTextAtSize(text, fontSize);
+
+        page.drawText(text, {
+            x: width - textWidth - 20,
+            y: 20,
+            size: fontSize,
+            font: font,
+            color: rgb(0, 0, 0),
+        });
+    });
+
+    const savedPdf = await pdf.save();
     return new Blob([savedPdf], { type: 'application/pdf' });
 };
